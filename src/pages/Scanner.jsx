@@ -14,8 +14,16 @@ function todayDate() { return new Date().toISOString().slice(0, 10) }
 function fmtTime(ts) { return new Date(ts).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
 
 function parseQR(raw) {
-  try { const o = JSON.parse(raw); return o.id || o.employee_id || raw.trim() }
-  catch { return raw.trim() }
+  if (!raw) return null
+  raw = raw.trim()
+  try {
+    const o = JSON.parse(raw)
+    // QR payload: { id: "HRMO-2026-0001", name: "...", dept: "..." }
+    return o.id || o.employee_id || null
+  } catch {
+    // Plain text scan — could be employee_id directly e.g. "HRMO-2026-0001"
+    return raw || null
+  }
 }
 
 const STATUS_COLOR = { on_time: '#0d9488', late: '#d97706', duplicate: '#6366f1', error: '#dc2626' }
@@ -99,8 +107,31 @@ export default function Scanner() {
 
     try {
       const today = getEffectiveDate()
-      const { data: emp } = await supabase.from('employees').select('*')
-        .or(`employee_id.eq.${empId},id.eq.${empId}`).single()
+
+      // FIX: Query employee_id and uuid separately — .or() breaks with dashes/special chars
+      let emp = null
+
+      // Try employee_id first (most common case e.g. HRMO-2026-0001)
+      const { data: byEmpId } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('employee_id', empId)
+        .maybeSingle()
+
+      if (byEmpId) {
+        emp = byEmpId
+      } else {
+        // Try uuid match (fallback)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        if (uuidRegex.test(empId)) {
+          const { data: byUuid } = await supabase
+            .from('employees')
+            .select('*')
+            .eq('id', empId)
+            .maybeSingle()
+          emp = byUuid
+        }
+      }
 
       if (!emp) {
         setLastScan({ error: true, message: `Unknown ID: ${empId}` })
@@ -111,12 +142,11 @@ export default function Scanner() {
         .eq('employee_id', emp.id).eq('event_date', today).maybeSingle()
 
       if (dup) {
-        setLastScan({ employee: emp, status: 'duplicate', time: dup.scanned_at, message: 'Already scanned today' })
+        setLastScan({ employee: emp, status: 'duplicate', time: dup.scanned_at })
         return
       }
 
       const status = isEffectiveOnTime() ? 'on_time' : 'late'
-      // Build scan timestamp — if test mode, combine testDate + testTime
       const scanTs = testMode
         ? new Date(`${testDate}T${testTime}:00`).toISOString()
         : new Date().toISOString()
@@ -132,6 +162,7 @@ export default function Scanner() {
       loadStats()
     } catch (err) {
       toast.error(err.message)
+      setLastScan({ error: true, message: err.message })
     } finally {
       setProcessing(false)
       // USB scanner: release lock fast (800ms) so next person can scan quickly
