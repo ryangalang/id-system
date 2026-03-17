@@ -75,8 +75,10 @@ export default function PrintPage({ preselected, onClearPreselected }) {
     })
   }
 
-  const handleSaveLayout = () => {
-    localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout))
+  const handleSaveLayout = (newLayout) => {
+    const toSave = newLayout || layout
+    localStorage.setItem(LAYOUT_KEY, JSON.stringify(toSave))
+    if (newLayout) setLayout(newLayout)
     toast.success('Layout saved!')
   }
 

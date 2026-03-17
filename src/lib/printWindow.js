@@ -1,112 +1,130 @@
 import { toDirectImageUrl } from './driveUtils'
 import { DEFAULT_LAYOUT } from '../components/IDEditor'
 
-const SIZES = {
-  cr80: { w: '53.98mm', h: '76.36mm'  },
-  a6:   { w: '74.25mm', h: '105mm'    },
-  a5:   { w: '105mm',   h: '148.5mm'  },
+const CARD_SIZES = {
+  cr80: { w: 53.98, h: 76.36,  perPage: 8  },
+  a6:   { w: 74.25, h: 105,    perPage: 4  },
+  a5:   { w: 105,   h: 148.5,  perPage: 2  },
 }
 
-function buildCardHTML(emp, size, qrDataUrl, layout, templateUrl) {
-  const L = layout || DEFAULT_LAYOUT
-  const cfg = SIZES[size]
+// % of card width → mm (exact physical size)
+const mm = (pct, base) => `${((pct / 100) * base).toFixed(3)}mm`
+// % font size → mm
+const fsmm = (pct, base) => `${Math.max(0.5, (pct / 100) * base).toFixed(3)}mm`
+
+function buildCard(emp, size, qrUrl, L, tplUrl) {
+  const { w, h } = CARD_SIZES[size]
   const photo = emp.photo_url ? toDirectImageUrl(emp.photo_url) : null
+  const name = [emp.first_name, emp.middle_initial ? emp.middle_initial.replace('.','')+'.' : '', emp.last_name]
+    .filter(Boolean).join(' ').toUpperCase()
 
-  const nameParts = [emp.first_name, emp.middle_initial ? emp.middle_initial.replace('.','')+'.' : '', emp.last_name].filter(Boolean)
-  const fullName = nameParts.join(' ').toUpperCase()
+  const p = v => `${v}%`   // positions stay as % of container
+  const f = pct => fsmm(pct, w)  // font sizes in mm
 
-  const pct = v => `${v}%`
-
-  // fontSize as % of card width — use vw equivalent via % of container
-  const fsStyle = (pct, bold, color, align, font) =>
-    `font-size:${pct}cqw;font-weight:${bold?900:400};color:${color};text-align:${align};font-family:${font};`
-
-  const photoHTML = photo
-    ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;" crossorigin="anonymous"/>`
-    : `<div style="width:100%;height:100%;background:#e8eaf0;display:flex;align-items:center;justify-content:center;color:#bbb;font-size:8px;font-family:Arial;">NO PHOTO</div>`
+  const textStyle = (el) =>
+    `font-size:${f(el.fontSize)};font-weight:${el.bold?900:400};color:${el.color};text-align:${el.align};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:100%;`
 
   return `
-  <div style="width:${cfg.w};height:${cfg.h};position:relative;overflow:hidden;display:inline-block;flex-shrink:0;container-type:inline-size;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
-    <img src="${templateUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;display:block;-webkit-print-color-adjust:exact;print-color-adjust:exact;"/>
+<div style="width:${w}mm;height:${h}mm;position:relative;overflow:hidden;display:inline-block;vertical-align:top;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+  <img src="${tplUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:fill;-webkit-print-color-adjust:exact;print-color-adjust:exact;" />
 
-    <div style="position:absolute;left:${pct(L.photo.x)};top:${pct(L.photo.y)};width:${pct(L.photo.w)};height:${pct(L.photo.h)};overflow:hidden;">
-      ${photoHTML}
-    </div>
+  <div style="position:absolute;left:${p(L.photo.x)};top:${p(L.photo.y)};width:${p(L.photo.w)};height:${p(L.photo.h)};overflow:hidden;">
+    ${photo
+      ? `<img src="${photo}" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;-webkit-print-color-adjust:exact;" />`
+      : `<div style="width:100%;height:100%;background:#e8eaf0;"></div>`
+    }
+  </div>
 
-    <div style="position:absolute;left:${pct(L.name.x)};top:${pct(L.name.y)};width:${pct(L.name.w)};">
-      <div style="${fsStyle(L.name.fontSize,L.name.bold,L.name.color,L.name.align,"'Arial Black',Arial,sans-serif")}text-transform:uppercase;line-height:1.2;">
-        ${fullName || 'EMPLOYEE NAME'}
-      </div>
-    </div>
+  <div style="position:absolute;left:${p(L.name.x)};top:${p(L.name.y)};width:${p(L.name.w)};overflow:hidden;">
+    <span style="${textStyle(L.name)}font-family:'Arial Black',Arial,sans-serif;text-transform:uppercase;">${name}</span>
+  </div>
 
-    <div style="position:absolute;left:${pct(L.position.x)};top:${pct(L.position.y)};width:${pct(L.position.w)};">
-      <div style="${fsStyle(L.position.fontSize,L.position.bold,L.position.color,L.position.align,'Arial,sans-serif')}text-transform:uppercase;letter-spacing:0.07em;line-height:1.3;">
-        ${emp.position || ''}
-      </div>
-    </div>
+  <div style="position:absolute;left:${p(L.position.x)};top:${p(L.position.y)};width:${p(L.position.w)};overflow:hidden;">
+    <span style="${textStyle(L.position)}font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:0.06em;">${emp.position||''}</span>
+  </div>
 
-    <div style="position:absolute;left:${pct(L.department.x)};top:${pct(L.department.y)};width:${pct(L.department.w)};">
-      <div style="${fsStyle(L.department.fontSize,L.department.bold,L.department.color,L.department.align,"'Arial Black',Arial,sans-serif")}text-transform:uppercase;line-height:1.2;">
-        ${emp.department || ''}
-      </div>
-    </div>
+  <div style="position:absolute;left:${p(L.department.x)};top:${p(L.department.y)};width:${p(L.department.w)};overflow:hidden;">
+    <span style="${textStyle(L.department)}font-family:'Arial Black',Arial,sans-serif;text-transform:uppercase;">${emp.department||''}</span>
+  </div>
 
-    ${qrDataUrl ? `
-    <div style="position:absolute;left:${pct(L.qr.x)};top:${pct(L.qr.y)};width:${pct(L.qr.w)};">
-      <img src="${qrDataUrl}" style="width:100%;height:auto;image-rendering:pixelated;display:block;"/>
-    </div>
-    <div style="position:absolute;left:${pct(L.qrLabel.x)};top:${pct(L.qrLabel.y)};width:${pct(L.qrLabel.w)};">
-      <div style="${fsStyle(L.qrLabel.fontSize,L.qrLabel.bold,L.qrLabel.color,L.qrLabel.align,'Arial,sans-serif')}letter-spacing:0.06em;">
-        ${emp.employee_id || ''}
-      </div>
-    </div>
-    ` : ''}
-  </div>`
+  ${qrUrl ? `
+  <div style="position:absolute;left:${p(L.qr.x)};top:${p(L.qr.y)};width:${p(L.qr.w)};">
+    <img src="${qrUrl}" style="width:100%;height:auto;image-rendering:pixelated;display:block;" />
+  </div>
+  <div style="position:absolute;left:${p(L.qrLabel.x)};top:${p(L.qrLabel.y)};width:${p(L.qrLabel.w)};overflow:hidden;">
+    <span style="${textStyle(L.qrLabel)}font-family:Arial,sans-serif;letter-spacing:0.06em;">${emp.employee_id||''}</span>
+  </div>` : ''}
+</div>`
 }
 
 export function openPrintWindow(queue, size, qrMap, layout) {
   if (!queue.length) return
-  const cardsPerPage = size === 'cr80' ? 8 : size === 'a6' ? 4 : 2
-  const templateUrl = window.location.origin + '/id-template-blank.png'
+
+  const L = layout || DEFAULT_LAYOUT
+  const { perPage } = CARD_SIZES[size]
+  const tplUrl = window.location.origin + '/id-template-blank.png'
+
+  // Build pages
   const pages = []
-  for (let i = 0; i < queue.length; i += cardsPerPage) pages.push(queue.slice(i, i + cardsPerPage))
+  for (let i = 0; i < queue.length; i += perPage) pages.push(queue.slice(i, i + perPage))
 
   const pagesHTML = pages.map((emps, idx) => `
-    <div class="page" style="display:flex;flex-wrap:wrap;gap:3mm;align-content:flex-start;page-break-after:${idx < pages.length-1?'always':'avoid'};">
-      ${emps.map(emp => buildCardHTML(emp, size, qrMap[emp.id], layout, templateUrl)).join('')}
-    </div>`).join('')
+<div style="display:flex;flex-wrap:wrap;gap:3mm;align-content:flex-start;${idx < pages.length-1 ? 'page-break-after:always;' : ''}">
+  ${emps.map(e => buildCard(e, size, qrMap[e.id], L, tplUrl)).join('\n')}
+</div>`).join('\n')
 
   const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8"/>
-<title>Dagupan ID Cards</title>
+<title>Dagupan ID Cards · ${queue.length} employees</title>
 <style>
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;margin:0;padding:0;}
-  body{background:#e0e0e0;font-family:Arial,sans-serif;}
-  @page{size:A4 portrait;margin:8mm;}
-  @media print{body{background:white;}.toolbar{display:none!important;}.content{margin-top:0!important;padding:0!important;}.page{box-shadow:none!important;background:transparent!important;padding:0!important;}}
-  .toolbar{position:fixed;top:0;left:0;right:0;background:#1a3a8f;color:white;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:999;}
-  .print-btn{background:white;color:#1a3a8f;border:none;padding:10px 28px;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;}
-  .print-btn:hover{background:#e8eef8;}
-  .content{margin-top:56px;padding:16px;display:flex;flex-direction:column;gap:16px;}
-  .page{background:white;padding:8mm;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.12);}
+*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;margin:0;padding:0;}
+body{background:#dde3f0;font-family:'Plus Jakarta Sans',Arial,sans-serif;}
+@page{size:A4 portrait;margin:8mm;}
+@media print{
+  body{background:white;}
+  .toolbar{display:none!important;}
+  .wrap{margin-top:0!important;padding:0!important;}
+  .page-block{box-shadow:none!important;padding:0!important;border-radius:0!important;}
+}
+.toolbar{
+  position:fixed;top:0;left:0;right:0;
+  background:linear-gradient(135deg,#122a6a,#1a3a8f);
+  color:white;padding:14px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  z-index:999;box-shadow:0 2px 12px rgba(0,0,0,.25);
+}
+.info-title{font-weight:800;font-size:15px;letter-spacing:.01em;}
+.info-sub{font-size:12px;opacity:.7;margin-top:2px;}
+.print-btn{
+  background:white;color:#1a3a8f;border:none;
+  padding:11px 28px;border-radius:8px;
+  font-size:14px;font-weight:800;cursor:pointer;
+  letter-spacing:.02em;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.print-btn:hover{background:#eef2fb;}
+.wrap{margin-top:60px;padding:16px;display:flex;flex-direction:column;gap:14px;}
+.page-block{background:white;padding:8mm;border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,.1);}
 </style>
 </head>
 <body>
-  <div class="toolbar">
-    <div>
-      <div style="font-weight:700;font-size:15px;">🖨️ City Government of Dagupan — ID Cards</div>
-      <div style="font-size:12px;opacity:.85;margin-top:2px;">${queue.length} employee${queue.length!==1?'s':''} · ${pages.length} page${pages.length!==1?'s':''} · ${size.toUpperCase()}</div>
-    </div>
-    <button class="print-btn" onclick="window.print()">🖨️ &nbsp;Print Now</button>
+<div class="toolbar">
+  <div>
+    <div class="info-title">🖨️ City Government of Dagupan — Employee ID Cards</div>
+    <div class="info-sub">${queue.length} employee${queue.length>1?'s':''} · ${pages.length} page${pages.length>1?'s':''} · Size: ${size.toUpperCase()} · ${CARD_SIZES[size].perPage} cards/page</div>
   </div>
-  <div class="content">${pagesHTML}</div>
+  <button class="print-btn" onclick="window.print()">🖨️ &nbsp; Print Now</button>
+</div>
+<div class="wrap">
+  ${pages.map(emps => `<div class="page-block">${emps.map(e => buildCard(e, size, qrMap[e.id], L, tplUrl)).join('')}</div>`).join('\n')}
+</div>
 </body>
 </html>`
 
-  const w = window.open('','_blank','width=960,height=800')
-  if (!w) { alert('Pop-up blocked! Please allow pop-ups and try again.'); return }
-  w.document.write(html)
-  w.document.close()
+  const win = window.open('', '_blank', 'width=1000,height=800')
+  if (!win) { alert('Pop-up blocked! Please allow pop-ups for this site.'); return }
+  win.document.write(html)
+  win.document.close()
 }
