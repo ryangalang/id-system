@@ -35,7 +35,7 @@ export default function Login() {
           <div className="login-logo-icon">
             <CreditCard size={28} color="white" />
           </div>
-          <h1 className="login-title">Dagupan ID System</h1>
+          <h1 className="login-title">Employee Attendance</h1>
           <p className="login-sub">City Government of Dagupan · HR Module</p>
         </div>
 

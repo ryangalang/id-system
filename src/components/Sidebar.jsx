@@ -32,7 +32,7 @@ export default function Sidebar() {
             <CreditCard size={20} color="white"/>
           </div>
           <div>
-            <div className="sidebar-logo-title">Dagupan IDs</div>
+            <div className="sidebar-logo-title">Attendance</div>
             <div className="sidebar-logo-sub">HR Management System</div>
           </div>
         </div>
