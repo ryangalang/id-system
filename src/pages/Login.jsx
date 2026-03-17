@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { IdCard, Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck } from 'lucide-react'
+import { CreditCard, Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Login() {
@@ -33,7 +33,7 @@ export default function Login() {
         {/* Logo */}
         <div className="login-logo">
           <div className="login-logo-icon">
-            <IdCard size={28} color="white" />
+            <CreditCard size={28} color="white" />
           </div>
           <h1 className="login-title">Dagupan ID System</h1>
           <p className="login-sub">City Government of Dagupan · HR Module</p>

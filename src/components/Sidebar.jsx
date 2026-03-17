@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import {
   LayoutDashboard, Users, Printer, FileUp,
-  LogOut, IdCard, ChevronRight
+  LogOut, CreditCard, ChevronRight
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -31,7 +31,7 @@ export default function Sidebar() {
             borderRadius:10,
             display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
           }}>
-            <IdCard size={20} color="white" />
+            <CreditCard size={20} color="white" />
           </div>
           <div>
             <div className="sidebar-logo-title">Dagupan IDs</div>
