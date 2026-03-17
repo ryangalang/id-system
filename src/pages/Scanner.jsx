@@ -371,34 +371,113 @@ export default function Scanner() {
             </div>
           )}
 
-          {/* Last scan result card */}
+          {/* Last scan result card — BIG, clear, kiosk-style */}
           {lastScan && (
             <div style={{
-              width:'100%', maxWidth:420, borderRadius:16, padding:'16px 20px',
-              background: `${STATUS_COLOR[scanStatus]}18`,
-              border: `1px solid ${STATUS_COLOR[scanStatus]}30`,
-              display:'flex', alignItems:'center', gap:14, animation:'fadeIn 0.2s ease',
+              width:'100%', maxWidth:480,
+              borderRadius:20,
+              padding:'24px 28px',
+              background: lastScan.error ? 'rgba(220,38,38,0.15)'
+                : scanStatus === 'on_time' ? 'rgba(13,148,136,0.18)'
+                : scanStatus === 'late' ? 'rgba(245,158,11,0.18)'
+                : scanStatus === 'duplicate' ? 'rgba(99,102,241,0.18)'
+                : 'rgba(220,38,38,0.15)',
+              border: `2px solid ${
+                lastScan.error ? '#dc2626'
+                : scanStatus === 'on_time' ? '#0d9488'
+                : scanStatus === 'late' ? '#f59e0b'
+                : scanStatus === 'duplicate' ? '#6366f1'
+                : '#dc2626'
+              }`,
+              animation: 'popIn 0.25s cubic-bezier(0.34,1.56,0.64,1)',
+              boxShadow: `0 0 40px ${
+                scanStatus === 'on_time' ? 'rgba(13,148,136,0.3)'
+                : scanStatus === 'late' ? 'rgba(245,158,11,0.3)'
+                : 'rgba(220,38,38,0.2)'
+              }`,
             }}>
-              <div style={{ width:54, height:54, borderRadius:'50%', overflow:'hidden', flexShrink:0, background:'rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:'1.1rem' }}>
-                {lastScan.employee?.photo_url
-                  ? <img src={toDirectImageUrl(lastScan.employee.photo_url)} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                  : (lastScan.employee?.first_name?.[0]||'') + (lastScan.employee?.last_name?.[0]||'?')
-                }
-              </div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontWeight:800, fontSize:'1rem', color:'#fff', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                  {lastScan.employee ? `${lastScan.employee.first_name} ${lastScan.employee.last_name}` : lastScan.message}
+              {lastScan.error ? (
+                /* Error state */
+                <div style={{ textAlign:'center' }}>
+                  <div style={{ fontSize:'3rem', marginBottom:8 }}>❌</div>
+                  <div style={{ fontWeight:800, fontSize:'1.25rem', color:'#f87171' }}>Employee Not Found</div>
+                  <div style={{ fontSize:'0.875rem', color:'rgba(255,255,255,0.4)', marginTop:4 }}>{lastScan.message}</div>
                 </div>
-                {lastScan.employee && (
-                  <div style={{ fontSize:'0.76rem', color:'rgba(255,255,255,0.5)', marginTop:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                    {lastScan.employee.department}
+              ) : (
+                <div style={{ display:'flex', alignItems:'center', gap:20 }}>
+                  {/* Photo */}
+                  <div style={{
+                    width:90, height:90,
+                    borderRadius:'50%',
+                    overflow:'hidden',
+                    flexShrink:0,
+                    border: `3px solid ${scanStatus === 'on_time' ? '#0d9488' : scanStatus === 'late' ? '#f59e0b' : '#6366f1'}`,
+                    background:'rgba(255,255,255,0.1)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontWeight:900, fontSize:'2rem', color:'white',
+                  }}>
+                    {lastScan.employee?.photo_url
+                      ? <img src={toDirectImageUrl(lastScan.employee.photo_url)} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top' }} />
+                      : (lastScan.employee?.first_name?.[0]||'') + (lastScan.employee?.last_name?.[0]||'?')
+                    }
                   </div>
-                )}
-                <div style={{ marginTop:5, fontWeight:700, fontSize:'0.875rem', color: STATUS_COLOR[scanStatus] }}>
-                  {STATUS_LABEL[scanStatus]}
-                  {lastScan.time && <span style={{ fontWeight:400, color:'rgba(255,255,255,0.4)', marginLeft:8 }}>{fmtTime(lastScan.time)}</span>}
+
+                  {/* Info */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    {/* Status badge */}
+                    <div style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      padding:'4px 12px', borderRadius:999, marginBottom:8,
+                      background: scanStatus==='on_time' ? '#0d9488'
+                        : scanStatus==='late' ? '#d97706'
+                        : scanStatus==='duplicate' ? '#6366f1'
+                        : '#dc2626',
+                      fontSize:'0.8rem', fontWeight:800, letterSpacing:'0.05em',
+                    }}>
+                      {scanStatus==='on_time' ? '✅ ON TIME'
+                        : scanStatus==='late' ? '⏰ LATE'
+                        : scanStatus==='duplicate' ? '🔄 ALREADY LOGGED'
+                        : '❌ ERROR'}
+                    </div>
+
+                    {/* Name — BIG */}
+                    <div style={{
+                      fontFamily:'var(--font-title)',
+                      fontWeight:900,
+                      fontSize:'1.375rem',
+                      color:'#fff',
+                      lineHeight:1.2,
+                      overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                    }}>
+                      {lastScan.employee?.first_name} {lastScan.employee?.last_name}
+                    </div>
+
+                    {/* Department */}
+                    <div style={{
+                      fontSize:'0.8125rem',
+                      color:'rgba(255,255,255,0.55)',
+                      marginTop:3,
+                      overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
+                    }}>
+                      {lastScan.employee?.department}
+                    </div>
+
+                    {/* Time */}
+                    <div style={{
+                      marginTop:6,
+                      fontFamily:'monospace',
+                      fontSize:'1.1rem',
+                      fontWeight:700,
+                      color: scanStatus==='on_time' ? '#2dd4bf'
+                        : scanStatus==='late' ? '#fbbf24'
+                        : 'rgba(255,255,255,0.3)',
+                    }}>
+                      🕐 {lastScan.time ? fmtTime(lastScan.time) : '—'}
+                      {lastScan.isTest && <span style={{ fontSize:'0.7rem', color:'#fbbf24', marginLeft:8, fontFamily:'var(--font)' }}>🧪 TEST</span>}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
@@ -446,7 +525,10 @@ export default function Scanner() {
           }
         </div>
       </div>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
+      <style>{`
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+        @keyframes popIn  { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+      `}</style>
     </div>
   )
 }
