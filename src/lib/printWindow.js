@@ -21,8 +21,14 @@ function buildCard(emp, size, qrUrl, L, tplUrl) {
   const p = v => `${v}%`   // positions stay as % of container
   const f = pct => fsmm(pct, w)  // font sizes in mm
 
+  const fontFor = (fontKey) => {
+    if (fontKey === 'montserrat') return "'Montserrat',Arial,sans-serif"
+    if (fontKey === 'canva-sans') return "'DM Sans','Plus Jakarta Sans',Arial,sans-serif"
+    return "Arial,sans-serif"
+  }
+
   const textStyle = (el) =>
-    `font-size:${f(el.fontSize)};font-weight:${el.bold?900:400};color:${el.color};text-align:${el.align};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:100%;`
+    `font-size:${f(el.fontSize)};font-weight:${el.bold?800:400};color:${el.color};text-align:${el.align};line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;width:100%;font-family:${fontFor(el.font)};`
 
   return `
 <div style="width:${w}mm;height:${h}mm;position:relative;overflow:hidden;display:inline-block;vertical-align:top;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
@@ -78,6 +84,8 @@ export function openPrintWindow(queue, size, qrMap, layout) {
 <head>
 <meta charset="UTF-8"/>
 <title>Dagupan ID Cards · ${queue.length} employees</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=DM+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;box-sizing:border-box;margin:0;padding:0;}
 body{background:#dde3f0;font-family:'Plus Jakarta Sans',Arial,sans-serif;}

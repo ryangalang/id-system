@@ -1,5 +1,6 @@
 import { toDirectImageUrl } from '../lib/driveUtils'
 import { DEFAULT_LAYOUT } from './IDEditor'
+import { getFontFamily } from '../lib/fontUtils'
 
 export const ID_SIZES = {
   cr80: { label: 'CR80 Portrait (Standard)', width: '53.98mm', height: '76.36mm', pxW: 204, pxH: 289 },
@@ -52,23 +53,23 @@ export default function IDCard({ employee, size = 'cr80', qrDataUrl, layout }) {
         }
       </div>
 
-      {/* NAME */}
+      {/* NAME — Canva Sans (DM Sans) */}
       <div style={{ position:'absolute', left:p(L.name.x), top:p(L.name.y), width:p(L.name.w), overflow:'hidden' }}>
-        <div style={{ fontSize:fpx(L.name.fontSize), fontWeight:L.name.bold?900:400, color:L.name.color, textAlign:L.name.align, fontFamily:"'Arial Black',Arial,sans-serif", textTransform:'uppercase', lineHeight:1.15, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+        <div style={{ fontSize:fpx(L.name.fontSize), fontWeight:L.name.bold?900:700, color:L.name.color, textAlign:L.name.align, fontFamily: getFontFamily(L.name.font), textTransform:'uppercase', lineHeight:1.15, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
           {fullName || 'EMPLOYEE NAME'}
         </div>
       </div>
 
-      {/* POSITION */}
+      {/* POSITION — Montserrat */}
       <div style={{ position:'absolute', left:p(L.position.x), top:p(L.position.y), width:p(L.position.w), overflow:'hidden' }}>
-        <div style={{ fontSize:fpx(L.position.fontSize), fontWeight:L.position.bold?700:400, color:L.position.color, textAlign:L.position.align, fontFamily:'Arial,sans-serif', textTransform:'uppercase', letterSpacing:'0.06em', lineHeight:1.3, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+        <div style={{ fontSize:fpx(L.position.fontSize), fontWeight:L.position.bold?700:400, color:L.position.color, textAlign:L.position.align, fontFamily: getFontFamily(L.position.font), textTransform:'uppercase', letterSpacing:'0.06em', lineHeight:1.3, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
           {employee?.position || ''}
         </div>
       </div>
 
-      {/* DEPARTMENT */}
+      {/* DEPARTMENT — Montserrat Bold */}
       <div style={{ position:'absolute', left:p(L.department.x), top:p(L.department.y), width:p(L.department.w), overflow:'hidden' }}>
-        <div style={{ fontSize:fpx(L.department.fontSize), fontWeight:L.department.bold?900:400, color:L.department.color, textAlign:L.department.align, fontFamily:"'Arial Black',Arial,sans-serif", textTransform:'uppercase', lineHeight:1.2, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+        <div style={{ fontSize:fpx(L.department.fontSize), fontWeight:L.department.bold?800:600, color:L.department.color, textAlign:L.department.align, fontFamily: getFontFamily(L.department.font), textTransform:'uppercase', lineHeight:1.2, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
           {employee?.department || ''}
         </div>
       </div>
@@ -80,9 +81,9 @@ export default function IDCard({ employee, size = 'cr80', qrDataUrl, layout }) {
         </div>
       )}
 
-      {/* QR LABEL / EMPLOYEE ID */}
+      {/* QR LABEL / EMPLOYEE ID — Montserrat */}
       <div style={{ position:'absolute', left:p(L.qrLabel.x), top:p(L.qrLabel.y), width:p(L.qrLabel.w), overflow:'hidden' }}>
-        <div style={{ fontSize:fpx(L.qrLabel.fontSize), fontWeight:L.qrLabel.bold?700:400, color:L.qrLabel.color, textAlign:L.qrLabel.align, fontFamily:'Arial,sans-serif', letterSpacing:'0.06em' }}>
+        <div style={{ fontSize:fpx(L.qrLabel.fontSize), fontWeight:L.qrLabel.bold?700:400, color:L.qrLabel.color, textAlign:L.qrLabel.align, fontFamily: getFontFamily(L.qrLabel.font), letterSpacing:'0.06em' }}>
           {employee?.employee_id || ''}
         </div>
       </div>
